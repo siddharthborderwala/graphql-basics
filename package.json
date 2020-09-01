@@ -4,7 +4,7 @@
 	"description": "Basics of GraphQL",
 	"main": "index.js",
 	"scripts": {
-		"start": "babel-node src/index.js"
+		"start": "nodemon src/index.js --exec babel-node"
 	},
 	"author": "Siddharth Borderwala",
 	"license": "ISC",
@@ -12,7 +12,8 @@
 		"@babel/cli": "^7.10.5",
 		"@babel/core": "^7.11.4",
 		"@babel/node": "^7.10.5",
-		"@babel/preset-env": "^7.11.0"
+		"@babel/preset-env": "^7.11.0",
+		"nodemon": "^2.0.4"
 	},
 	"dependencies": {
 		"@babel/polyfill": "^7.10.4",
