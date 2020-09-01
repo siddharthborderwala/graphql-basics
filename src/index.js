@@ -1,5 +1,14 @@
 import { GraphQLServer } from 'graphql-yoga';
 
+function generateId() {
+  const id = [];
+  for (let i = 0; i < 24; i++) {
+    id.push(String.fromCharCode(97 + Math.floor(Math.random() * 26)));
+    if ((i + 1) % 6 === 0 && i !== 23) id.push('-');
+  }
+  return id.join('');
+}
+
 const users = [
   {
     id: '1',
@@ -80,6 +89,12 @@ const typeDefs = `
     comments: [Comment!]!
   }
 
+  type Mutation {
+    createUser(name: String!, email: String!, age: Int): User!
+    createPost(title: String!, body: String!, published: Boolean!, author: ID!): Post!
+    createComment(text: String!, author: ID!, post: ID!): Comment!
+  }
+
   type User {
     id: ID!
     name: String!
@@ -118,7 +133,7 @@ const resolvers = {
     },
     post() {
       return {
-        id: '456-456-456-456-',
+        id: '456-456-456-456',
         title: 'Graph QL is Great',
         body: 'Super duper awesome',
         published: true,
@@ -134,7 +149,7 @@ const resolvers = {
       );
     },
     posts(parent, args, ctx, info) {
-      const query = args.query.toLowerCase();
+      const query = (args.query || '').toLowerCase();
       if (!query) return posts;
 
       return posts.filter((post) => {
@@ -146,6 +161,63 @@ const resolvers = {
     },
     comments(parent, args, ctx, info) {
       return comments;
+    },
+  },
+  Mutation: {
+    createUser(parent, args, ctx, info) {
+      const { name, email, age } = args;
+      if (users.some((user) => user.email === email))
+        throw new Error('Email not available');
+
+      const newUser = {
+        name,
+        email,
+        age,
+        id: generateId(),
+      };
+
+      users.push(newUser);
+
+      return newUser;
+    },
+    createPost(parent, args, ctx, info) {
+      const { title, body, published, author } = args;
+      if (!users.some((user) => user.id === author))
+        throw new Error('User not found');
+
+      const newPost = {
+        id: generateId(),
+        title,
+        body,
+        published,
+        author,
+      };
+
+      posts.push(newPost);
+
+      return newPost;
+    },
+    createComment(parent, args, ctx, info) {
+      const { author, post } = args;
+
+      if (!users.some(({ id }) => id === author))
+        throw new Error('User not found');
+      if (!posts.some(({ id, published }) => id === post && published))
+        throw new Error('Post not found');
+
+      const text = args.text.trim();
+      if (!text) throw new Error('Comment cannot be empty');
+
+      const newComment = {
+        text,
+        author,
+        post,
+        id: generateId(),
+      };
+
+      comments.push(newComment);
+
+      return newComment;
     },
   },
   Post: {
